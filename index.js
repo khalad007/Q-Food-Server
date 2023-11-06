@@ -31,13 +31,19 @@ async function run() {
 
 
 
-
+    // get all data from allFood 
+    app.get('/allfood', async (req, res) => {
+      const cursor = foodCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+    
     //data get for featured section on home page
-    app.get('/top-foods', async (req, res) => {
+    app.get('/featured-foods', async (req, res) => {
       try {
         const cursor = foodCollection.find()
-          .sort({ foodQuantity: -1 }) 
-          .limit(6); 
+          .sort({ foodQuantity: -1 })
+          .limit(6);
 
         const result = await cursor.toArray();
         res.json(result);
