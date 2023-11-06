@@ -27,7 +27,25 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    
+    const foodCollection = client.db('foodDB').collection('allFood');
+
+
+
+
+    //data get for featured section on home page
+    app.get('/top-foods', async (req, res) => {
+      try {
+        const cursor = foodCollection.find()
+          .sort({ foodQuantity: -1 }) 
+          .limit(6); 
+
+        const result = await cursor.toArray();
+        res.json(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred' });
+      }
+    });
 
 
 
@@ -44,10 +62,10 @@ run().catch(console.dir);
 
 //for check server is running 
 app.get('/', (req, res) => {
-    res.send('server is running 11')
+  res.send('server is running 11')
 })
 
 app.listen(port, () => {
-    console.log(`eleven assignment server is running on ${port}`)
+  console.log(`eleven assignment server is running on ${port}`)
 })
 
