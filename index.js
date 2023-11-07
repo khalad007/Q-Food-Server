@@ -48,22 +48,46 @@ async function run() {
     })
 
     // for delete user added data 
-    app.delete('/allFood/:id', async (req,res) => {
+    app.delete('/allFood/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await foodCollection.deleteOne(query);
       res.send(result);
     })
-
+    // .........................................................................................................
     // update or edit a user food
-    app.get('/allFood/:id', async(req, res) => {
+    app.get('/allFood/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await foodCollection.findOne(query);
-      res.send(result);
+      res.send(result)
     })
 
+    // client side update is done noow send it to or put it to db 
 
+    app.put('/allFood/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updatedFood = req.body;
+      const food = {
+        $set: {
+          pickupLocation: updatedFood.pickupLocation,
+          foodName: updatedFood.foodName,
+          foodImage: updatedFood.foodImage,
+          foodQuantity: updatedFood.foodQuantity,
+          additionalNotes: updatedFood.additionalNotes,
+          expiredDateTime: updatedFood.expiredDateTime,
+          foodStatus: updatedFood.foodStatus
+
+        }
+      }
+
+      const result = await foodCollection.updateOne(filter, food, options)
+      res.send(result)
+    })
+
+    //..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     //getting single user added food 
 
     app.get('/allfood', async (req, res) => {
@@ -84,7 +108,7 @@ async function run() {
       res.send(result)
     })
 
-    
+
     //for singleFoodDetails
     app.get('/allfood/:id', async (req, res) => {
       const id = req.params.id;
@@ -92,7 +116,7 @@ async function run() {
 
       const options = {
         // Include only the `title` and `imdb` fields in the returned document
-        projection: { foodName: 1, foodImage: 1, donator: 1, foodQuantity: 1, pickupLocation: 1, expiredDateTime: 1, additionalNotes: 1 },
+        projection: { foodName: 1,foodStatus: 1, foodImage: 1, donator: 1, foodQuantity: 1, pickupLocation: 1, expiredDateTime: 1, additionalNotes: 1 },
       };
 
       const result = await foodCollection.findOne(query, options);
