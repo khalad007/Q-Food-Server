@@ -39,6 +39,14 @@ async function run() {
       res.send(result);
     })
 
+    //posted single data on allFood 
+    app.post('/allfood', async (req, res) => {
+      const newFood = req.body;
+      console.log(newFood)
+      const result = await foodCollection.insertOne(newFood)
+      res.send(result);
+    })
+
 
     // get all data from allFood 
     app.get('/allfood', async (req, res) => {
