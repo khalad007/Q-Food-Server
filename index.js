@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,7 +28,16 @@ async function run() {
     // await client.connect();
 
     const foodCollection = client.db('foodDB').collection('allFood');
+    const foodReqCollection = client.db('foodDB').collection('foodRequestCollection');
 
+
+    // for sending data to database ( user requested food )
+    app.post('/reqfood', async (req, res) => {
+      const reqFood = req.body;
+      console.log(reqFood);
+      const result = await foodReqCollection.insertOne(reqFood);
+      res.send(result);
+    })
 
 
     // get all data from allFood 
@@ -37,7 +46,20 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result)
     })
-    
+    //for singleFoodDetails
+    app.get('/allfood/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+
+      const options = {
+        // Include only the `title` and `imdb` fields in the returned document
+        projection: { foodName: 1, foodImage: 1, donator: 1, foodQuantity: 1, pickupLocation: 1, expiredDateTime: 1, additionalNotes: 1 },
+      };
+
+      const result = await foodCollection.findOne(query, options);
+      res.send(result);
+    })
+
     //data get for featured section on home page
     app.get('/featured-foods', async (req, res) => {
       try {
@@ -53,7 +75,8 @@ async function run() {
       }
     });
 
-
+    // request food post on database 
+    app.post()
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
