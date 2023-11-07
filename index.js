@@ -47,6 +47,28 @@ async function run() {
       res.send(result);
     })
 
+    // for delete user added data 
+    app.delete('/allFood/:id', async (req,res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await foodCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    // update or edit a user food
+
+    //getting single user added food 
+
+    app.get('/allfood', async (req, res) => {
+      console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { 'donator.email': req.query.email }; // Include the nested field 'donator.email'
+      }
+      const result = await foodCollection.find(query).toArray();
+      res.send(result);
+    });
+    //...................................
 
     // get all data from allFood 
     app.get('/allfood', async (req, res) => {
@@ -54,6 +76,8 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result)
     })
+
+    
     //for singleFoodDetails
     app.get('/allfood/:id', async (req, res) => {
       const id = req.params.id;
