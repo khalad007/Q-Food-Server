@@ -56,6 +56,13 @@ async function run() {
     })
 
     // update or edit a user food
+    app.get('/allFood/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await foodCollection.findOne(query);
+      res.send(result);
+    })
+
 
     //getting single user added food 
 
