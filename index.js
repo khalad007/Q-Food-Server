@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
@@ -7,8 +9,14 @@ const port = process.env.PORT || 5000;
 
 
 // middle ware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173'
+  ],
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser())
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pcnyajy.mongodb.net/?retryWrites=true&w=majority`;
@@ -22,6 +30,18 @@ const client = new MongoClient(uri, {
   }
 });
 
+//middleware 
+const logger = (req, res, next) => {
+  console.log('log: info', req.method, req.url)
+  next();
+}
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  console.log('token in the middleware', token);
+  next();
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -31,6 +51,27 @@ async function run() {
     const foodReqCollection = client.db('foodDB').collection('foodRequestCollection');
 
 
+    //for token ........................................
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      console.log('user for token ', user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none'
+        })
+        .send({ success: true })
+    })
+
+    app.post('/logout', async(req, res) => {
+      const user = req.body;
+      console.log('loging out ', user)
+      res.clearCookie('token', {maxAge: 0}).send({success: true})
+    })
+
     // for sending data to database ( user requested food )
     app.post('/reqfood', async (req, res) => {
       const reqFood = req.body;
@@ -39,11 +80,11 @@ async function run() {
       res.send(result);
     })
 
-    // for update pending to delevered
-    app.patch('/reqConfirm/:id', async( req, res) => {
+    // for update pending to delevered (Manage Button)
+    app.patch('/reqConfirm/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = {_id: new ObjectId(id)}
-      
+      const filter = { _id: new ObjectId(id) }
+
       const reqConfirm = req.body;
       console.log(reqConfirm)
       const updateDoc = {
@@ -69,6 +110,14 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await foodCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    //for cancel
+    app.delete('/cancel/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await foodReqCollection.deleteOne(query);
       res.send(result);
     })
     // .........................................................................................................
@@ -107,8 +156,9 @@ async function run() {
     //..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     //getting single user added food 
 
-    app.get('/allfood', async (req, res) => {
+    app.get('/allfood', logger,verifyToken, async (req, res) => {
       console.log(req.query.email);
+      // console.log('cook cookies', req.cookies)
       let query = {};
       if (req.query?.email) {
         query = { 'donator.email': req.query.email }; // Include the nested field 'donator.email'
@@ -130,14 +180,27 @@ async function run() {
       console.log(req.query.email);
       let query = {};
       if (req.query?.email) {
-        query = { email: req.query.email }; // Include the nested field 'donator.email'
+        query = { email: req.query.email };
       }
       const result = await foodReqCollection.find(query).toArray();
       res.send(result);
     });
 
-    
- 
+    //for my request page 
+
+    app.get('/myRequest', async (req, res) => {
+      console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { userEmail: req.query.email }; // Use the email from the request
+      }
+      const result = await foodReqCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
+    //my request page cancel {delete }
+
 
     //for singleFoodDetails
     app.get('/allfood/:id', async (req, res) => {
@@ -169,7 +232,7 @@ async function run() {
     });
 
     // request food post on database 
-   
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
