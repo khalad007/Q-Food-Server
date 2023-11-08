@@ -39,6 +39,23 @@ async function run() {
       res.send(result);
     })
 
+    // for update pending to delevered
+    app.patch('/reqConfirm/:id', async( req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      
+      const reqConfirm = req.body;
+      console.log(reqConfirm)
+      const updateDoc = {
+        $set: {
+          foodStatus: reqConfirm.foodStatus
+        },
+      };
+      const result = await foodReqCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+
     //posted single data on allFood 
     app.post('/allfood', async (req, res) => {
       const newFood = req.body;
@@ -108,6 +125,19 @@ async function run() {
       res.send(result)
     })
 
+    // for donator manage page .....................................................................
+    app.get('/donatorManage', async (req, res) => {
+      console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email }; // Include the nested field 'donator.email'
+      }
+      const result = await foodReqCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    
+ 
 
     //for singleFoodDetails
     app.get('/allfood/:id', async (req, res) => {
@@ -116,7 +146,7 @@ async function run() {
 
       const options = {
         // Include only the `title` and `imdb` fields in the returned document
-        projection: { foodName: 1,foodStatus: 1, foodImage: 1, donator: 1, foodQuantity: 1, pickupLocation: 1, expiredDateTime: 1, additionalNotes: 1 },
+        projection: { foodName: 1, foodStatus: 1, foodImage: 1, donator: 1, foodQuantity: 1, pickupLocation: 1, expiredDateTime: 1, additionalNotes: 1 },
       };
 
       const result = await foodCollection.findOne(query, options);
@@ -139,7 +169,7 @@ async function run() {
     });
 
     // request food post on database 
-    app.post()
+   
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
