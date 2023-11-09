@@ -11,7 +11,9 @@ const port = process.env.PORT || 5000;
 // middle ware
 app.use(cors({
   origin: [
-    'http://localhost:5173'
+    // 'http://localhost:5173',
+    'https://eleven-assignment-993a2.web.app',
+    'https://eleven-assignment-993a2.firebaseapp.com'
   ],
   credentials: true
 }));
@@ -66,10 +68,10 @@ async function run() {
         .send({ success: true })
     })
 
-    app.post('/logout', async(req, res) => {
+    app.post('/logout', async (req, res) => {
       const user = req.body;
       console.log('loging out ', user)
-      res.clearCookie('token', {maxAge: 0}).send({success: true})
+      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
     })
 
     // for sending data to database ( user requested food )
@@ -156,7 +158,7 @@ async function run() {
     //..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     //getting single user added food 
 
-    app.get('/allfood', logger,verifyToken, async (req, res) => {
+    app.get('/allfood', logger, verifyToken, async (req, res) => {
       console.log(req.query.email);
       // console.log('cook cookies', req.cookies)
       let query = {};
